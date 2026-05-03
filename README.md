@@ -19,29 +19,23 @@ All scripts are fully reproducible, and raw data are retrieved programmatically 
 
 ---
 
-## What We Found
+## What We Found (In Progress)
 
 | Serotype | Caribbean sequences | Jamaican sequences | Dominant clade |
 |----------|--------------------|--------------------|----------------|
-| DENV-1   | 312                | 47                 | Genotype V     |
-| DENV-2   | 289                | 31                 | Asian/American |
-| DENV-3   | 104                | 12                 | Genotype III   |
-| DENV-4   | 58                 | 6                  | Genotype II    |
+| DENV-1   |               |                 | Genotype V     |
+| DENV-2   |                 |               | Asian/American |
+| DENV-3   |                 |                | Genotype III   |
+| DENV-4   |                  |                  | Genotype II    |
 
 Key findings:
-- **DENV-2 Asian/American** lineage has been continuously circulating in Jamaica since at least 2010, with evidence of multiple independent introductions from South America and the wider Caribbean.
-- **DENV-1 Genotype V** sequences cluster with strains from Puerto Rico and the Dominican Republic, suggesting a shared regional transmission network rather than isolated Jamaican outbreaks.
-- Phylogenetic analysis reveals that the 2019 surge corresponded to the co-circulation of two distinct DENV-2 lineages — consistent with increased outbreak severity observed clinically.
-- No Jamaican DENV-3 or DENV-4 sequences were sampled after 2016, though regional circulation continues; surveillance gaps rather than true absence are the most likely explanation.
+- 
 
 ---
 
 ## What This Means for Jamaica
 
-1. **Outbreak preparedness**: The persistence of multiple serotypes means Jamaica faces ongoing risk of severe dengue in populations previously exposed to a different serotype. Serological mismatch is a predictor of dengue haemorrhagic fever.
-2. **Surveillance investment**: The scarcity of recent Jamaican sequences (post-2020) reflects under-sequencing, not low transmission. Integrating genomic surveillance into the existing National Surveillance Unit workflow would cost-effectively fill this gap.
-3. **Regional coordination**: Clusters shared with Puerto Rico, Dominican Republic, and Trinidad point to air-travel corridors as seeding routes. A Caribbean-wide genomic network (modelled on the SARS-CoV-2 PAHO response) could provide early warnings months before clinical cases spike.
-4. **Vaccine planning**: DENV-2 Asian/American dominance is relevant for vaccine rollout decisions (e.g., Dengvaxia seroprevalence screening requirements), since prior exposure to this serotype affects safety profiles.
+
 
 ---
 
