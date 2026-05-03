@@ -1,19 +1,13 @@
-#!/usr/bin/env bash
-# =============================================================================
-# 01_download.sh
-# Download Caribbean dengue whole-genome sequences from NCBI GenBank using
-# Entrez Direct (EDirect).
-#
-# Requirements:
-#   - Optional: set NCBI_API_KEY in your environment to raise rate limits
-#
-# Output:
-#   data/raw/dengue_caribbean_genomes.fasta   — raw multi-FASTA
-#   data/raw/retrieval_metadata.txt           — accession + submission info
-# =============================================================================
+ # Verify Biopython and Pandas installation
+try:
+    import Bio
+    import pandas as pd
+    print("Biopython and Pandas are installed correctly.")
+except ImportError:
+    print("Error: Biopython or Pandas are not installed.")
 
 from __future__ import annotations
-
+py
 import csv
 import re
 import sys
