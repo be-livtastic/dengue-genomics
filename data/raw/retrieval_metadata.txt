@@ -1,20 +1,24 @@
-Retrieval date : 2026-05-03T00:00:00Z
-Database       : NCBI Nucleotide
-Query          : dengue virus[organism] AND ("complete genome"[title] OR "complete sequence"[title])
-                 AND (Jamaica[All Fields] OR "Dominican Republic"[All Fields]
-                      OR "Puerto Rico"[All Fields] OR Trinidad[All Fields]
-                      OR Barbados[All Fields] OR Haiti[All Fields]
-                      OR Cuba[All Fields] OR Martinique[All Fields]
-                      OR Guadeloupe[All Fields] OR Bahamas[All Fields])
-Accessions     : 43
-FASTA output   : data/raw/dengue_caribbean_genomes.fasta
-GenBank output : data/raw/dengue_caribbean_genomes.gb
-EDirect version: 16.2
+DENGUE FEVER RETRIEVAL METADATA & QUALITY CONTROL SUMMARY
+======================================================================
 
-Notes:
-  - Sequences shorter than 9,000 bp were excluded from downstream analyses
-    to retain only complete and near-complete genomes.
-  - Accessions are listed in data/metadata/dengue_global_genomes.csv.
-  - Retrieval performed with NCBI EDirect (scripts/01_download.sh).
-  - Some accessions may be updated or withdrawn; re-run 01_download.sh
-    to obtain the current set from NCBI.
+Generated:           2026-05-03T23-07-43Z
+Tool:                Entrez/Biopython, taxid 12637
+Query:               txid12637[Organism:exp] AND ("complete genome"[Assembly Level] OR "chromosome"[Assembly Level]) AND "latest refseq"[filter] AND all[filter] NOT anomalous[filter]
+Records retrieved:   4
+
+ASSEMBLY LEVEL DISTRIBUTION
+----------------------------------------------------------------------
+  Complete Genome               4  (100.0%)
+
+PRIORITIZED METADATA COMPLETENESS
+----------------------------------------------------------------------
+  Collection Year          0/4  (0.0%)
+  Country                  0/4  (0.0%)
+  Serotype                 0/4  (0.0%)
+  Host                     0/4  (0.0%)
+
+DUPLICATION CHECK
+----------------------------------------------------------------------
+  Unique BioSamples:   0 (of 0)
+  Unique BioProjects:  0 (of 0)
+  Duplicate BioSamples: 0

@@ -1,0 +1,23 @@
+GEO-FILTERED DENGUE FEVER RETRIEVAL METADATA & QUALITY CONTROL SUMMARY
+======================================================================
+
+Generated:           2026-05-03T23-15-04Z
+Tool:                Entrez/Biopython, taxid 12637
+Query:               txid12637[Organism:exp] AND ("complete genome"[Assembly Level] OR "chromosome"[Assembly Level] OR "scaffold"[Assembly Level]) AND "latest refseq"[filter] AND all[filter] NOT anomalous[filter] (geo-filtered)
+Records retrieved:   0
+
+ASSEMBLY LEVEL DISTRIBUTION
+----------------------------------------------------------------------
+
+PRIORITIZED METADATA COMPLETENESS
+----------------------------------------------------------------------
+  Collection Year          0/1  (0.0%)
+  Country                  0/1  (0.0%)
+  Serotype                 0/1  (0.0%)
+  Host                     0/1  (0.0%)
+
+DUPLICATION CHECK
+----------------------------------------------------------------------
+  Unique BioSamples:   0 (of 0)
+  Unique BioProjects:  0 (of 0)
+  Duplicate BioSamples: 0
