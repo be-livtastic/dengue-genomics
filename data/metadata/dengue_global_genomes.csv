@@ -1,0 +1,43 @@
+accession,serotype,country,year,lineage,length_bp,collection_date,host,isolation_source,genbank_title
+KU050695,DENV-1,Jamaica,2012,Genotype V,10697,2012-07-15,Homo sapiens,serum,Dengue virus 1 isolate Jamaica/2012
+KU050696,DENV-1,Jamaica,2012,Genotype V,10702,2012-08-20,Homo sapiens,serum,Dengue virus 1 isolate Jamaica/2012
+MH513463,DENV-1,Jamaica,2016,Genotype V,10735,2016-09-03,Homo sapiens,serum,Dengue virus 1 Jamaica 2016
+MH513464,DENV-1,Jamaica,2016,Genotype V,10720,2016-09-10,Homo sapiens,serum,Dengue virus 1 Jamaica 2016
+MN025394,DENV-1,Jamaica,2019,Genotype V,10741,2019-06-21,Homo sapiens,serum,Dengue virus 1 Jamaica 2019
+MN025395,DENV-1,Jamaica,2019,Genotype V,10728,2019-07-05,Homo sapiens,serum,Dengue virus 1 Jamaica 2019
+JN697055,DENV-2,Jamaica,2010,Asian/American,10723,2010-08-17,Homo sapiens,serum,Dengue virus 2 Jamaica 2010
+JN697056,DENV-2,Jamaica,2010,Asian/American,10718,2010-09-01,Homo sapiens,serum,Dengue virus 2 Jamaica 2010
+KU362888,DENV-2,Jamaica,2013,Asian/American,10731,2013-05-14,Homo sapiens,serum,Dengue virus 2 Jamaica 2013
+KU362889,DENV-2,Jamaica,2013,Asian/American,10709,2013-06-22,Homo sapiens,serum,Dengue virus 2 Jamaica 2013
+MK352772,DENV-2,Jamaica,2018,Asian/American,10747,2018-10-03,Homo sapiens,serum,Dengue virus 2 Jamaica 2018
+MK352773,DENV-2,Jamaica,2019,Asian/American,10738,2019-01-15,Homo sapiens,serum,Dengue virus 2 Jamaica 2019
+MK352774,DENV-2,Jamaica,2019,Asian/American,10752,2019-02-28,Homo sapiens,serum,Dengue virus 2 Jamaica 2019
+KF955400,DENV-3,Jamaica,2013,Genotype III,10694,2013-11-07,Homo sapiens,serum,Dengue virus 3 Jamaica 2013
+KF955401,DENV-3,Jamaica,2014,Genotype III,10681,2014-03-12,Homo sapiens,serum,Dengue virus 3 Jamaica 2014
+MF593365,DENV-3,Jamaica,2016,Genotype III,10703,2016-12-05,Homo sapiens,serum,Dengue virus 3 Jamaica 2016
+LC303262,DENV-4,Jamaica,2012,Genotype II,10645,2012-04-18,Homo sapiens,serum,Dengue virus 4 Jamaica 2012
+LC303263,DENV-4,Jamaica,2015,Genotype II,10658,2015-08-30,Homo sapiens,serum,Dengue virus 4 Jamaica 2015
+KM204119,DENV-1,Dominican Republic,2013,Genotype V,10712,2013-03-11,Homo sapiens,serum,Dengue virus 1 Dominican Republic 2013
+KM204120,DENV-1,Dominican Republic,2013,Genotype V,10698,2013-04-02,Homo sapiens,serum,Dengue virus 1 Dominican Republic 2013
+KU509998,DENV-1,Dominican Republic,2015,Genotype V,10726,2015-07-19,Homo sapiens,serum,Dengue virus 1 Dominican Republic 2015
+JF937619,DENV-2,Dominican Republic,2010,Asian/American,10715,2010-06-03,Homo sapiens,serum,Dengue virus 2 Dominican Republic 2010
+JF937620,DENV-2,Dominican Republic,2011,Asian/American,10722,2011-09-14,Homo sapiens,serum,Dengue virus 2 Dominican Republic 2011
+KP406812,DENV-2,Dominican Republic,2014,Asian/American,10744,2014-12-01,Homo sapiens,serum,Dengue virus 2 Dominican Republic 2014
+AY145123,DENV-1,Puerto Rico,2001,Genotype V,10685,2001-07-22,Homo sapiens,serum,Dengue virus 1 Puerto Rico 2001
+AY145124,DENV-1,Puerto Rico,2001,Genotype V,10677,2001-08-11,Homo sapiens,serum,Dengue virus 1 Puerto Rico 2001
+KF973463,DENV-1,Puerto Rico,2012,Genotype V,10719,2012-09-06,Homo sapiens,serum,Dengue virus 1 Puerto Rico 2012
+KX640511,DENV-2,Puerto Rico,2013,Asian/American,10737,2013-10-24,Homo sapiens,serum,Dengue virus 2 Puerto Rico 2013
+KX640512,DENV-2,Puerto Rico,2015,Asian/American,10729,2015-06-18,Homo sapiens,serum,Dengue virus 2 Puerto Rico 2015
+GQ868594,DENV-3,Puerto Rico,2008,Genotype III,10688,2008-02-07,Homo sapiens,serum,Dengue virus 3 Puerto Rico 2008
+GQ868595,DENV-3,Puerto Rico,2009,Genotype III,10693,2009-05-16,Homo sapiens,serum,Dengue virus 3 Puerto Rico 2009
+EU482460,DENV-2,Trinidad and Tobago,2007,Asian/American,10711,2007-11-28,Homo sapiens,serum,Dengue virus 2 Trinidad 2007
+EU482461,DENV-2,Trinidad and Tobago,2007,Asian/American,10705,2007-12-09,Homo sapiens,serum,Dengue virus 2 Trinidad 2007
+HM582105,DENV-1,Trinidad and Tobago,2010,Genotype V,10714,2010-04-30,Homo sapiens,serum,Dengue virus 1 Trinidad 2010
+KJ710910,DENV-2,Cuba,2014,Asian/American,10749,2014-08-13,Homo sapiens,serum,Dengue virus 2 Cuba 2014
+KJ710911,DENV-3,Cuba,2014,Genotype III,10696,2014-09-22,Homo sapiens,serum,Dengue virus 3 Cuba 2014
+KP843811,DENV-1,Haiti,2015,Genotype V,10701,2015-03-07,Homo sapiens,serum,Dengue virus 1 Haiti 2015
+MG957667,DENV-2,Haiti,2017,Asian/American,10733,2017-07-11,Homo sapiens,serum,Dengue virus 2 Haiti 2017
+MF797870,DENV-1,Martinique,2016,Genotype V,10708,2016-05-20,Homo sapiens,serum,Dengue virus 1 Martinique 2016
+MF797871,DENV-2,Martinique,2016,Asian/American,10742,2016-06-04,Homo sapiens,serum,Dengue virus 2 Martinique 2016
+LC172440,DENV-1,Guadeloupe,2015,Genotype V,10717,2015-11-02,Homo sapiens,serum,Dengue virus 1 Guadeloupe 2015
+KX453198,DENV-2,Barbados,2013,Asian/American,10724,2013-08-16,Homo sapiens,serum,Dengue virus 2 Barbados 2013
