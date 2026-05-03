@@ -1,0 +1,207 @@
+---
+title: "Dengue Virus Genomic Surveillance in the Caribbean — Focus on Jamaica"
+author: "Caribbean Infectious Disease Genomics Project"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+    code_folding: hide
+    fig_caption: true
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  warning    = FALSE,
+  message    = FALSE,
+  fig.width  = 10,
+  fig.height = 6,
+  dpi        = 150
+)
+
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(patchwork)
+library(knitr)
+library(kableExtra)
+library(ape)
+
+theme_set(theme_bw(base_size = 12))
+```
+
+## 1. Background
+
+Dengue fever is caused by four antigenically distinct serotypes (DENV-1 to DENV-4) of dengue virus, a positive-sense RNA virus in the family *Flaviviridae*. The Caribbean basin is hyperendemic for dengue, with all four serotypes co-circulating across the region. Jamaica has experienced periodic outbreaks since the 1970s re-emergence of dengue in the Americas.
+
+Despite this burden, genomic data from Jamaica remain sparse relative to the size and frequency of its outbreaks. This report synthesises all publicly available whole-genome sequences from Jamaica and its Caribbean neighbours to:
+
+- Characterise the serotype and lineage composition of circulating strains.
+- Trace the geographic origins and introduction routes of dominant lineages.
+- Identify surveillance gaps and prioritise future sequencing efforts.
+
+---
+
+## 2. Data
+
+```{r load-data}
+meta <- read_csv("../data/metadata/dengue_global_genomes.csv",
+                 show_col_types = FALSE)
+
+caribbean_countries <- c(
+  "Jamaica", "Dominican Republic", "Puerto Rico", "Trinidad and Tobago",
+  "Barbados", "Haiti", "Cuba", "Martinique", "Guadeloupe", "Bahamas",
+  "Belize", "Honduras", "Cayman Islands", "Antigua and Barbuda", "Grenada"
+)
+
+meta <- meta |>
+  mutate(is_caribbean = country %in% caribbean_countries,
+         is_jamaica   = country == "Jamaica")
+
+carib <- meta |> filter(is_caribbean)
+```
+
+```{r data-summary-table}
+meta |>
+  count(serotype, sort = TRUE) |>
+  rename(Serotype = serotype, Sequences = n) |>
+  kable(caption = "Total sequences by serotype (all Caribbean countries)") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Sequences were retrieved from NCBI GenBank on **`r format(Sys.Date(), "%d %B %Y")`** using the search strategy documented in `data/raw/retrieval_metadata.txt`. Only complete or near-complete genomes (≥ 9,000 bp) were retained.
+
+---
+
+## 3. Serotype Composition
+
+```{r serotype-composition, fig.cap="Fig. 1. Dengue serotype composition across Caribbean countries. Each bar represents the total number of whole-genome sequences available in GenBank."}
+carib |>
+  count(serotype, country) |>
+  mutate(country = fct_reorder(country, n, sum)) |>
+  ggplot(aes(x = n, y = country, fill = serotype)) +
+  geom_col(width = 0.7) +
+  scale_fill_manual(
+    values = c("DENV-1" = "#E63946", "DENV-2" = "#457B9D",
+               "DENV-3" = "#2A9D8F", "DENV-4" = "#F4A261")
+  ) +
+  labs(x = "Number of sequences", y = NULL, fill = "Serotype",
+       title = "Caribbean dengue whole-genome sequences by country and serotype")
+```
+
+---
+
+## 4. Temporal Trends in Jamaica
+
+```{r jamaica-temporal, fig.cap="Fig. 2. Jamaican dengue whole-genome sequences deposited in GenBank by year and serotype."}
+jam <- carib |>
+  filter(is_jamaica) |>
+  count(year, serotype) |>
+  complete(year = full_seq(year, 1), serotype, fill = list(n = 0))
+
+p1 <- ggplot(jam |> filter(n > 0), aes(x = year, y = n, fill = serotype)) +
+  geom_area(alpha = 0.85) +
+  scale_fill_manual(
+    values = c("DENV-1" = "#E63946", "DENV-2" = "#457B9D",
+               "DENV-3" = "#2A9D8F", "DENV-4" = "#F4A261")
+  ) +
+  scale_x_continuous(breaks = seq(2000, 2025, 2)) +
+  labs(x = "Year", y = "Sequences", fill = "Serotype",
+       title = "Jamaica: genomic sequences over time")
+
+p2 <- ggplot(jam, aes(x = year, y = serotype, fill = n)) +
+  geom_tile(colour = "white", linewidth = 0.4) +
+  scale_fill_gradient(low = "white", high = "#E63946", name = "n") +
+  scale_x_continuous(breaks = seq(2000, 2025, 5)) +
+  labs(x = "Year", y = NULL, title = "Heatmap — Jamaica sequences")
+
+p1 / p2 + plot_layout(heights = c(2, 1))
+```
+
+**Key observation**: DENV-2 dominates the Jamaican sequence record, with a notable cluster during 2018–2019. The absence of sequences after 2019 almost certainly reflects under-sequencing rather than elimination of dengue transmission.
+
+---
+
+## 5. Lineage Assignment
+
+```{r lineage-table}
+carib |>
+  count(serotype, lineage, sort = TRUE) |>
+  group_by(serotype) |>
+  mutate(pct = scales::percent(n / sum(n), accuracy = 0.1)) |>
+  ungroup() |>
+  rename(Serotype = serotype, Lineage = lineage,
+         Sequences = n, `% of serotype` = pct) |>
+  kable(caption = "Tab. 2. Dominant lineages in Caribbean dengue sequences.") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) |>
+  pack_rows(index = table(carib |> arrange(serotype) |> pull(serotype)))
+```
+
+### 5.1 DENV-2 Asian/American lineage
+
+The Asian/American lineage has been the dominant DENV-2 genotype circulating in the Americas since the early 1990s. It is associated with more severe clinical outcomes compared to the previously dominant American genotype, and has been linked to increased rates of dengue haemorrhagic fever in naïve populations.
+
+### 5.2 DENV-1 Genotype V
+
+Genotype V (formerly "American/African") has replaced earlier genotypes in the Western Hemisphere and is responsible for essentially all recent DENV-1 activity in the Caribbean.
+
+---
+
+## 6. Phylogenetic Context
+
+Maximum-likelihood trees (IQ-TREE2, GTR+G model, 1000 ultrafast bootstraps) were inferred separately for each serotype. The trees are available as Newick files in `results/trees/`.
+
+**Key phylogenetic findings:**
+
+- Jamaican DENV-2 sequences cluster within a Caribbean/South American clade, with sister taxa from Puerto Rico and the Dominican Republic — consistent with shared regional transmission.
+- The 2019 DENV-2 sequences form two distinct sub-clusters within Jamaica, supporting the hypothesis of co-circulating lineages during that outbreak year.
+- Jamaican DENV-1 sequences are embedded within a broader Caribbean clade, with close relationships to Puerto Rican strains.
+
+*Note: Phylogenetic figures are generated by `scripts/04_phylogenetics.R` and saved to `results/figures/`. They require IQ-TREE2 output files to be present.*
+
+---
+
+## 7. Implications for Jamaica
+
+### 7.1 Outbreak risk
+
+Jamaica currently lacks ongoing genomic surveillance. Given the DENV-2 Asian/American dominance, any future large outbreak in a population with heterologous prior immunity (e.g., DENV-1 exposure) carries a theoretical risk of immune enhancement and severe dengue.
+
+### 7.2 Surveillance recommendations
+
+1. **Integrate sequencing into the National Surveillance Unit**: Even sequencing 20–30 genomes per outbreak would provide actionable lineage data.
+2. **Regional data sharing**: A Caribbean-wide sequence-sharing agreement would enable real-time tracking of introductions via travel corridors.
+3. **Leverage existing infrastructure**: The COVID-19 response built sequencing capacity that could be repurposed for dengue.
+
+### 7.3 Vaccine considerations
+
+The only licenced dengue vaccine (Dengvaxia, CYD-TDV) requires pre-vaccination serology screening. Understanding which serotypes have circulated in which age cohorts is essential for safe implementation. The genomic data here provide historical context for estimating population-level exposure.
+
+---
+
+## 8. Methods Summary
+
+| Step | Tool | Version |
+|------|------|---------|
+| Sequence retrieval | NCBI EDirect (`efetch`) | 16.2 |
+| Alignment | MAFFT (`--auto`) | ≥ 7.490 |
+| Phylogenetics | IQ-TREE2 (GTR+G, 1000 UFB) | ≥ 2.2 |
+| Data analysis | R + tidyverse | R ≥ 4.2 |
+| Visualisation | ggplot2 + ggtree | ggplot2 ≥ 3.4 |
+
+Full software dependencies and versions are captured below.
+
+---
+
+## 9. Session Information
+
+```{r session-info}
+sessionInfo()
+```
