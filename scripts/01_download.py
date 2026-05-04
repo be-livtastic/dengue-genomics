@@ -7,8 +7,8 @@ try:
 except ImportError:
     print("Error: Biopython or Pandas are not installed.")
 
-import pandas as pd
 import csv
+import os
 import re
 import sys
 import time
@@ -20,7 +20,7 @@ from typing import Optional
 from xml.etree import ElementTree as ET
 
 try:
-    from Bio import Entrez
+    from Bio import Entrez, SeqIO
 except ImportError:
     sys.exit("Biopython not installed. Run: pip install biopython pandas")
 
@@ -29,11 +29,9 @@ except ImportError:
 # CONFIGURATION
 # ============================================================================
 
-# Re-use global NCBI_EMAIL and NCBI_API_KEY from previous cells
-# NCBI_EMAIL is required by NCBI
-# NCBI_API_KEY is optional but recommended
-NCBI_EMAIL = "2515050@chester.ac.uk"      # REQUIRED by NCBI
-NCBI_API_KEY: Optional[str] = None         # Optional but recommended (value from previous cell)
+# Read credentials from the environment for bash-driven runs.
+NCBI_EMAIL = os.getenv("NCBI_EMAIL", "2515050@chester.ac.uk")
+NCBI_API_KEY: Optional[str] = os.getenv("NCBI_API_KEY") or None
 
 TAXONOMY_ID = 12637  # Corrected: Dengue virus (verified on NCBI Taxonomy)
 INCLUDE_CHROMOSOME = True # include chromosome-level assemblies
@@ -53,6 +51,9 @@ TARGET_REGIONS = [
 
 # Output
 OUTPUT_DIR_DENGUE = Path("./results")
+RAW_DIR_DENGUE = Path("./data/raw")
+METADATA_DIR_DENGUE = Path("./data/metadata")
+RAW_FASTA_DENGUE = RAW_DIR_DENGUE / "dengue_caribbean_genomes.fasta"
 TIMESTAMP_DENGUE = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
 
 # ============================================================================
@@ -99,10 +100,9 @@ def build_search_term_dengue(db: str, include_chromosome: bool, include_scaffold
         level_clause = "(" + " OR ".join(levels) + ")"
         base_term = f'txid{TAXONOMY_ID}[Organism:exp] AND {level_clause} AND "latest refseq"[filter] AND all[filter] NOT anomalous[filter]'
     elif db == "nucleotide":
-        # For nucleotide, look for 'complete genome' or 'full length' in title or definition
-        # Also, filter for RefSeq nucleotide entries specifically (e.g., 'refseq [filter]')
+        # For nucleotide, look for complete or near-complete genome entries in GenBank.
         level_clause = '("complete genome"[Title] OR "full length"[Title] OR "complete sequence"[Title] OR "complete cds"[Title])'
-        base_term = f'txid{TAXONOMY_ID}[Organism:exp] AND {level_clause} AND "refseq"[filter]'
+        base_term = f'txid{TAXONOMY_ID}[Organism:exp] AND {level_clause}'
     else:
         raise ValueError(f"Unknown database: {db}")
 
@@ -122,6 +122,31 @@ def search_ncbi_db(db: str, term: str) -> list[str]:
     ids = result["IdList"]
     print(f"  Found {result['Count']} records in {db}, retrieved {len(ids)} UIDs.")
     return ids
+
+
+def fetch_ncbi_fasta(db: str, uids: list[str], output_path: Path, batch_size: int = 200) -> int:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    written_ids: set[str] = set()
+    written_records = 0
+
+    with output_path.open("w", encoding="utf-8") as out_handle:
+        for i in range(0, len(uids), batch_size):
+            batch = uids[i:i + batch_size]
+            print(f"  Fetching FASTA from {db} {i + 1}-{i + len(batch)} of {len(uids)}...", end="\r")
+            handle = Entrez.efetch(db=db, id=",".join(batch), rettype="fasta", retmode="text")
+            for record in SeqIO.parse(handle, "fasta"):
+                seq_id = record.id.strip()
+                if not seq_id or seq_id in written_ids:
+                    continue
+                written_ids.add(seq_id)
+                SeqIO.write(record, out_handle, "fasta")
+                written_records += 1
+            handle.close()
+            time.sleep(0.34 if not NCBI_API_KEY else 0.11)
+
+    print()
+    print(f"  Wrote {written_records} FASTA records to {output_path}")
+    return written_records
 
 def fetch_ncbi_summaries(db: str, uids: list[str], batch_size: int = 200) -> list[dict]:
     all_summaries = []
@@ -255,7 +280,7 @@ def summary_to_dengue_record(db: str, summary: dict) -> DengueAssemblyRecord:
         else:
             rec.assembly_level = "Nucleotide Sequence"
 
-        rec.biosample = str(summary.get("AcessionVesion","")) # Biosample can be in DBLink
+        rec.biosample = str(summary.get("Biosample", "")).strip()
         rec.bioproject = str(summary.get("Bioproject", "")).strip()
         rec.submission_date = str(summary.get("UpdateDate", "")).strip() # Use UpdateDate for nucleotide
 
@@ -295,116 +320,63 @@ def summary_to_dengue_record(db: str, summary: dict) -> DengueAssemblyRecord:
 
 def main_dengue() -> None:
     OUTPUT_DIR_DENGUE.mkdir(parents=True, exist_ok=True)
+    RAW_DIR_DENGUE.mkdir(parents=True, exist_ok=True)
+    METADATA_DIR_DENGUE.mkdir(parents=True, exist_ok=True)
     setup_entrez_dengue()
 
     print("=" * 70)
-    print("Dengue Fever Genome Assembly Curator")
+    print("Dengue Fever Genome Retrieval Pipeline")
     print(f"Started: {TIMESTAMP_DENGUE}")
     print("=" * 70)
 
-    all_uids = []
-    all_summaries = []
-
-    # ----- Step 1.1: Search RefSeq for all global high-quality assemblies (from Assembly DB) -----
-    print("\n[1/5] Searching NCBI Assembly database for global high-quality genomes...")
-    term_hq_assembly = build_search_term_dengue(db="assembly", include_chromosome=INCLUDE_CHROMOSOME, include_scaffold=False, include_geo_filter=False)
-    uids_assembly = search_ncbi_db(db="assembly", term=term_hq_assembly)
-    used_term_assembly = term_hq_assembly
-
-    if len(uids_assembly) < SCAFFOLD_FALLBACK_THRESHOLD:
-        print(f"\n  Assembly DB high-quality count ({len(uids_assembly)}) below threshold ({SCAFFOLD_FALLBACK_THRESHOLD}). Including global scaffold-level...")
-        term_all_assembly = build_search_term_dengue(db="assembly", include_chromosome=True, include_scaffold=True, include_geo_filter=False)
-        uids_assembly = search_ncbi_db(db="assembly", term=term_all_assembly)
-        used_term_assembly = term_all_assembly
-
-    print(f"  Final Assembly DB selection based on query '{used_term_assembly}' resulted in {len(uids_assembly)} UIDs.")
-    all_uids.extend(uids_assembly)
-
-    # ----- Step 1.2: Search RefSeq for all global complete genomes (from Nucleotide DB) -----
-    print("\n[2/5] Searching NCBI Nucleotide database for global complete genomes...")
-    term_nucleotide = build_search_term_dengue(db="nucleotide", include_chromosome=False, include_scaffold=False, include_geo_filter=False) # Scaffold/chromosome not directly applicable for nucleotide title search
+    print("\n[1/4] Searching NCBI Nucleotide database for Caribbean dengue genomes...")
+    term_nucleotide = build_search_term_dengue(db="nucleotide", include_chromosome=False, include_scaffold=False, include_geo_filter=True)
     uids_nucleotide = search_ncbi_db(db="nucleotide", term=term_nucleotide)
     used_term_nucleotide = term_nucleotide
     print(f"  Final Nucleotide DB selection based on query '{used_term_nucleotide}' resulted in {len(uids_nucleotide)} UIDs.")
-    all_uids.extend(uids_nucleotide)
 
-    # Remove duplicates from combined UIDs (if any accession is found in both)
-    all_uids_set = set(all_uids)
-    print(f"\nCombined unique UIDs from Assembly and Nucleotide databases: {len(all_uids_set)}")
-    all_uids_list = list(all_uids_set)
-
-    if not all_uids_list:
-        print("No assemblies or nucleotide sequences found. Check your query and connection.")
-        # Proceed to write empty files if no UIDs were found
+    if not uids_nucleotide:
+        print("No nucleotide sequences found. Check your query and connection.")
         write_dengue_csv([], "dengue_global_genomes.csv")
-        write_dengue_metadata_summary([], used_term_assembly + " OR " + used_term_nucleotide, "global_retrieval_metadata.txt", "GLOBAL DENGUE FEVER")
+        write_dengue_metadata_summary([], used_term_nucleotide, "global_retrieval_metadata.txt", "GLOBAL DENGUE FEVER")
         write_dengue_csv([], "dengue_geo_filtered_genomes.csv")
-        write_dengue_metadata_summary([], (used_term_assembly + " OR " + used_term_nucleotide) + " (geo-filtered)", "geo_filtered_retrieval_metadata.txt", "GEO-FILTERED DENGUE FEVER")
-        print("\nDone. No records retrieved globally.")
-        return # Exit the main function
+        write_dengue_metadata_summary([], f"{used_term_nucleotide} (geo-filtered)", "geo_filtered_retrieval_metadata.txt", "GEO-FILTERED DENGUE FEVER")
+        RAW_FASTA_DENGUE.write_text("", encoding="utf-8")
+        print("\nDone. No records retrieved.")
+        return
 
-    # ----- Step 2: Fetch assembly summaries -----
-    print(f"\n[3/5] Fetching metadata for {len(uids_assembly)} Assembly records...")
-    summaries_assembly = fetch_ncbi_summaries(db="assembly", uids=uids_assembly)
-
-    print(f"\n[4/5] Fetching metadata for {len(uids_nucleotide)} Nucleotide records...")
+    print(f"\n[2/4] Fetching metadata for {len(uids_nucleotide)} nucleotide records...")
     summaries_nucleotide = fetch_ncbi_summaries(db="nucleotide", uids=uids_nucleotide)
 
-    records = []
-    for s in summaries_assembly:
-        rec = summary_to_dengue_record(db="assembly", summary=s)
-        if rec.assembly_accession:
-            records.append(rec)
-
+    records: list[DengueAssemblyRecord] = []
+    seen_accessions: set[str] = set()
     for s in summaries_nucleotide:
         rec = summary_to_dengue_record(db="nucleotide", summary=s)
-        if rec.assembly_accession:
+        if rec.assembly_accession and rec.assembly_accession not in seen_accessions:
+            seen_accessions.add(rec.assembly_accession)
             records.append(rec)
 
-    print(f"\n  Finished processing. Kept {len(records)} records for global dataset.")
+    print(f"\n  Finished processing. Kept {len(records)} unique nucleotide records for the Caribbean dataset.")
 
-    # ----- Step 3: no further enrichment from BioSample needed as Biosource is prioritized ----- # Now includes nucleotide metadata parsing
-    print(f"\n[5/5] Writing outputs to {OUTPUT_DIR_DENGUE}/")
+    print(f"\n[3/4] Writing metadata outputs to {OUTPUT_DIR_DENGUE}/")
+    write_dengue_csv(records, "dengue_global_genomes.csv")
+    write_dengue_metadata_summary(records, used_term_nucleotide, "global_retrieval_metadata.txt", "GLOBAL DENGUE FEVER")
 
-    # Write global dataset
-    if records:
-        write_dengue_csv(records, "dengue_global_genomes.csv")
-        write_dengue_metadata_summary(records, used_term_assembly + " OR " + used_term_nucleotide, "global_retrieval_metadata.txt", "GLOBAL DENGUE FEVER")
-        print(f"  Wrote global dataset: {len(records)} records.")
-    else:
-        print("  No records available for the global dataset.")
-        write_dengue_csv([], "dengue_global_genomes.csv") # Ensure empty file is created
-        write_dengue_metadata_summary([], used_term_assembly + " OR " + used_term_nucleotide, "global_retrieval_metadata.txt", "GLOBAL DENGUE FEVER")
+    geo_filtered_records = records
+    write_dengue_csv(geo_filtered_records, "dengue_geo_filtered_genomes.csv")
+    write_dengue_metadata_summary(geo_filtered_records, f"{used_term_nucleotide} (geo-filtered)", "geo_filtered_retrieval_metadata.txt", "GEO-FILTERED DENGUE FEVER")
 
-    # Apply geographical filter and write separate output
-    geo_filtered_records = []
-    target_regions_lower = {region.lower() for region in TARGET_REGIONS}
-
-    for rec in records:
-        # Check country derived from geo_loc_name
-        if rec.country and rec.country.lower() in target_regions_lower:
-            geo_filtered_records.append(rec)
-        # Also check if any part of geo_loc_name matches a target region
-        elif rec.geo_loc_name:
-            if any(target in rec.geo_loc_name.lower() for target in target_regions_lower):
-                 geo_filtered_records.append(rec)
-
-    if geo_filtered_records:
-        write_dengue_csv(geo_filtered_records, "dengue_geo_filtered_genomes.csv")
-        write_dengue_metadata_summary(geo_filtered_records, (used_term_assembly + " OR " + used_term_nucleotide) + " (geo-filtered)", "geo_filtered_retrieval_metadata.txt", "GEO-FILTERED DENGUE FEVER")
-        print(f"  Wrote geo-filtered dataset: {len(geo_filtered_records)} records.")
-    else:
-        print("  No records matched the geographical filter criteria for a separate output.")
-        write_dengue_csv([], "dengue_geo_filtered_genomes.csv") # Ensure empty file is created
-        write_dengue_metadata_summary([], (used_term_assembly + " OR " + used_term_nucleotide) + " (geo-filtered)", "geo_filtered_retrieval_metadata.txt", "GEO-FILTERED DENGUE FEVER")
+    print(f"\n[4/4] Fetching combined FASTA for {len(geo_filtered_records)} records...")
+    fetch_ncbi_fasta(db="nucleotide", uids=uids_nucleotide, output_path=RAW_FASTA_DENGUE)
 
     print("\nDone.")
-    print(f"  Total records processed (global): {len(records)}")
+    print(f"  Total records processed: {len(records)}")
     print(f"  Records matching geographical filter: {len(geo_filtered_records)}")
+    print(f"  Raw FASTA: {RAW_FASTA_DENGUE.resolve()}")
     print(f"  Output directory:  {OUTPUT_DIR_DENGUE.resolve()}")
 
 def write_dengue_csv(records: list[DengueAssemblyRecord], output_filename: str) -> None:
-    out = OUTPUT_DIR_DENGUE / output_filename
+    out = METADATA_DIR_DENGUE / output_filename
     fieldnames = [
         "assembly_accession", "strain_name", "assembly_level",
         "biosample", "bioproject",
@@ -421,7 +393,7 @@ def write_dengue_csv(records: list[DengueAssemblyRecord], output_filename: str) 
     print(f"  Wrote {out.name}")
 
 def write_dengue_metadata_summary(records: list[DengueAssemblyRecord], query: str, output_filename: str, title_prefix: str) -> None:
-    out = OUTPUT_DIR_DENGUE / output_filename
+    out = RAW_DIR_DENGUE / output_filename
     n = len(records) or 1
 
     levels = Counter(r.assembly_level for r in records)

@@ -1,0 +1,7 @@
+accession,strain_name,serotype,country,year
+NC_001474,DENV2_ref,2,Jamaica,2020
+NC_001477,DENV1_ref,1,Trinidad and Tobago,2019
+NC_001475,DENV3_ref,3,Cuba,2021
+NC_002640,DENV4_ref,4,Puerto Rico,2018
+DENV1_JAM_2019,DENV1_Jamaica_2019,1,Jamaica,2019
+DENV2_JAM_2020,DENV2_Jamaica_2020,2,Jamaica,2020
