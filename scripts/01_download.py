@@ -1,3 +1,4 @@
+from __future__ import annotations
  # Verify Biopython and Pandas installation
 try:
     import Bio
@@ -6,8 +7,7 @@ try:
 except ImportError:
     print("Error: Biopython or Pandas are not installed.")
 
-from __future__ import annotations
-py
+import pandas as pd
 import csv
 import re
 import sys
@@ -131,7 +131,17 @@ def fetch_ncbi_summaries(db: str, uids: list[str], batch_size: int = 200) -> lis
         handle = Entrez.esummary(db=db, id=",".join(batch))
         result = Entrez.read(handle)
         handle.close()
-        all_summaries.extend(result["DocumentSummarySet"]["DocumentSummary"])
+        if result and isinstance(result, dict) and 'DocumentSummarySet' in result and 'DocumentSummary' in result['DocumentSummarySet']:
+            doc_summaries = result['DocumentSummarySet']['DocumentSummary']
+            if isinstance(doc_summaries, list):
+                all_summaries.extend(doc_summaries)
+            else: # It's a single dict, append it
+                all_summaries.append(doc_summaries)
+        elif isinstance(result, list): # In case Entrez.read returns a list of summaries directly
+            all_summaries.extend(result)
+        else: # Fallback for unexpected structures
+            print(f"            Warning: Unexpected Entrez.read result structure: {result}")
+            all_summaries.append(result) # Append the raw result for inspection
         time.sleep(0.34 if not NCBI_API_KEY else 0.11)  # respect rate limits
     print()
     return all_summaries
