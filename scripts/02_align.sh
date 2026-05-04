@@ -25,6 +25,19 @@ set -euo pipefail
 RAW_DIR="data/raw"
 ALIGN_DIR="data/aligned"
 REF_DIR="data/references"
+INPUT_FASTA="$RAW_DIR/dengue_caribbean_genomes.fasta"
+
+for cmd in efetch minimap2 samtools seqkit mafft; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Missing required command: $cmd" >&2
+    exit 1
+  fi
+done
+
+if [[ ! -f "$INPUT_FASTA" ]]; then
+  echo "Missing input FASTA: $INPUT_FASTA. Run scripts/01_download.py first." >&2
+  exit 1
+fi
 
 mkdir -p "$ALIGN_DIR" "$REF_DIR"
 
@@ -53,8 +66,6 @@ done
 # ---------------------------------------------------------------------------
 # Step 2: Classify sequences by serotype using minimap2 vs all four refs
 # ---------------------------------------------------------------------------
-INPUT_FASTA="$RAW_DIR/dengue_caribbean_genomes.fasta"
-
 echo "[$(date +%T)] Classifying sequences by serotype..."
 for ST in "${SEROTYPES[@]}"; do
   ACC="${REFS[$ST]}"
